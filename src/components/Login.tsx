@@ -43,27 +43,58 @@ export const Login: React.FC = () => {
       setLoading(false);
     }
   };
+  const getGoogleAuthErrorMessage = (error: any) => {
+    const code = error?.code || 'unknown-error';
+    const message = error?.message || String(error);
+
+    console.error('Google login real error:', { code, message, fullError: error });
+
+    switch (code) {
+      case 'auth/unauthorized-domain':
+        return `النطاق غير مسموح في Firebase Authorized domains. الدومين الحالي: ${window.location.hostname}`;
+
+      case 'auth/operation-not-allowed':
+        return 'تسجيل الدخول بجوجل غير مفعل. فعّل Google من Firebase Authentication > Sign-in method.';
+
+      case 'auth/popup-blocked':
+        setShowRedirectOption(true);
+        return 'المتصفح منع النافذة المنبثقة. اضغط على زر إعادة التوجيه أو اسمح بالـ Popups.';
+
+      case 'auth/popup-closed-by-user':
+        return 'تم إغلاق نافذة جوجل قبل إكمال تسجيل الدخول.';
+
+      case 'auth/api-key-not-valid':
+      case 'auth/invalid-api-key':
+        return 'مفتاح Firebase API غير صحيح أو لا ينتمي لهذا المشروع.';
+
+      case 'auth/network-request-failed':
+        return 'مشكلة اتصال بالإنترنت أو حظر من المتصفح/الشبكة.';
+
+      default:
+        return `${code}: ${message}`;
+    }
+  };
 
   const handleGoogleLogin = async () => {
     setLoading(true);
     setShowRedirectOption(false);
+
     try {
       const provider = new GoogleAuthProvider();
-      // In some mobile environments, popup is not supported at all
-      if (window.matchMedia('(display-mode: standalone)').matches || (navigator as any).standalone) {
+      provider.setCustomParameters({ prompt: 'select_account' });
+
+      if (
+        window.matchMedia('(display-mode: standalone)').matches ||
+        (navigator as any).standalone
+      ) {
         await signInWithRedirect(auth, provider);
         return;
       }
+
       await signInWithPopup(auth, provider);
       toast.success('تم تسجيل الدخول بنجاح عبر جوجل');
     } catch (error: any) {
-      console.error(error);
-      if (error.code === 'auth/popup-blocked' || error.code === 'auth/operation-not-supported-in-this-environment') {
-        toast.error('النافذة المنبثقة غير مدعومة في هذا المتصفح. يرجى المحاولة باستخدام إعادة التوجيه.');
-        setShowRedirectOption(true);
-      } else {
-        toast.error('فشل تسجيل الدخول عبر جوجل. تأكد من إعدادات النطاق المسموح به في Firebase.');
-      }
+      toast.error(getGoogleAuthErrorMessage(error));
     } finally {
       setLoading(false);
     }
@@ -71,17 +102,17 @@ export const Login: React.FC = () => {
 
   const handleGoogleRedirect = async () => {
     setLoading(true);
+
     try {
       const provider = new GoogleAuthProvider();
+      provider.setCustomParameters({ prompt: 'select_account' });
       await signInWithRedirect(auth, provider);
     } catch (error: any) {
-      console.error(error);
-      toast.error('فشل تسجيل الدخول عبر جوجل (إعادة التوجيه).');
+      toast.error(getGoogleAuthErrorMessage(error));
     } finally {
       setLoading(false);
     }
   };
-
   return (
     <div className="min-h-screen flex items-center justify-center bg-slate-50 p-4 font-sans rtl" dir="rtl">
       <div className="max-w-md w-full glass-card rounded-3xl p-8 animate-slide-up">
