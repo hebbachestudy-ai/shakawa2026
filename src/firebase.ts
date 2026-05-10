@@ -14,7 +14,7 @@ const firebaseConfig = {
   storageBucket:"gen-lang-client-0320815828.firebasestorage.app",
   messagingSenderId:"1081365990604",
   appId:"1:1081365990604:web:968fb01be8c74495904669",
-};
+}
 
 const app = initializeApp(firebaseConfig);
 
