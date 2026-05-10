@@ -6,7 +6,7 @@ import {
   doc,
 } from "firebase/firestore";
 import { getStorage } from "firebase/storage";
-
+// Firebase configuration
 const firebaseConfig = {
   apiKey: "AIzaSyAR55z3_7fDco5Lv9uoze_IFZbaCEBi2sU",
   authDomain: "gen-lang-client-0320815828.firebaseapp.com",
