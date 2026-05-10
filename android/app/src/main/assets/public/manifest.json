@@ -1,0 +1,32 @@
+{
+  "name": "تطبيق شكاوى المدية",
+  "short_name": "شكاوى",
+  "description": "تطبيق شامل لإدارة بلاغات المواطنين حول صيانة الطرق والإنارة والمخاطر العامة في ولاية المدية.",
+  "start_url": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "categories": ["productivity", "utilities", "government"],
+  "background_color": "#ffffff",
+  "theme_color": "#2563eb",
+  "icons": [
+    {
+      "src": "https://picsum.photos/seed/app-icon/192/192",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "https://picsum.photos/seed/app-icon/512/512",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "any maskable"
+    }
+  ],
+  "permissions": [
+    "camera",
+    "microphone",
+    "geolocation",
+    "notifications",
+    "internet"
+  ]
+}

@@ -1,0 +1,184 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    // Default deny catch-all
+    match /{document=**} {
+      allow read, write: if false;
+    }
+
+    // ===============================================================
+    // Helper Functions
+    // ===============================================================
+    function isAuthenticated() {
+      return request.auth != null;
+    }
+    
+    function isOwner(uid) {
+      return isAuthenticated() && request.auth.uid == uid;
+    }
+    
+    function isAdmin() {
+      return isAuthenticated() && (
+        request.auth.token.email == "hebbache.study@gmail.com" || 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin')
+      );
+    }
+
+    function hasAnyRole(roles) {
+      return isAuthenticated() && (
+        request.auth.token.email == "hebbache.study@gmail.com" || 
+        (exists(/databases/$(database)/documents/users/$(request.auth.uid)) && 
+         (get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role == 'Admin' || 
+          get(/databases/$(database)/documents/users/$(request.auth.uid)).data.role in roles))
+      );
+    }
+
+    // ===============================================================
+    // Validation Functions
+    // ===============================================================
+    function isValidUser(data) {
+      return data.keys().hasAll(['uid', 'email', 'role', 'name', 'status']) &&
+             data.uid is string &&
+             data.email is string &&
+             data.role in ['Admin', 'BranchManager', 'Citizen', 'Inspection', 'Authority', 'Maintenance', 'Contractor', 'Coordinator', 'Supervisor', 'wali'] &&
+             (!('entity' in data) || data.entity in ['Municipality', 'Sonelgaz', 'ADE', 'ONA', 'ProjectsCoordination', 'Wilaya']) &&
+             data.status in ['Active', 'Frozen'];
+    }
+
+    function isValidReport(data) {
+      let requiredFields = ['type', 'location', 'photoUrl', 'status', 'citizenUid', 'createdAt', 'district', 'municipality', 'region', 'province', 'targetEntity'];
+      return data.keys().hasAll(requiredFields) &&
+             data.citizenUid == request.auth.uid &&
+             data.status == 'New' &&
+             data.targetEntity in ['Municipality', 'Sonelgaz', 'ADE', 'ONA'] &&
+             data.district is string &&
+             data.municipality is string &&
+             data.region is string;
+    }
+
+    function isValidReportUpdate(data, prevData) {
+      // Allow specific roles to update status and add notes/pricing
+      // We check if the user has the required role
+      return hasAnyRole(['Admin', 'Authority', 'BranchManager', 'Inspection', 'Maintenance', 'Contractor']);
+    }
+
+    // ===============================================================
+    // Rules
+    // ===============================================================
+
+    match /users/{uid} {
+      // Allow any authenticated user to read profiles
+      // This is needed for dashboards to find contractors, teams, etc.
+      allow read: if isAuthenticated();
+      
+      // Citizens can create their own profile, Admin can create any
+      allow create: if isAuthenticated() && (
+        (isOwner(uid) && request.resource.data.role == 'Citizen' && isValidUser(request.resource.data)) || 
+        isAdmin()
+      );
+      
+      // Admin can update any, user can update their own except role
+      allow update: if isAuthenticated() && (
+        isAdmin() || 
+        (isOwner(uid) && request.resource.data.role == resource.data.role && isValidUser(request.resource.data))
+      );
+      
+      allow delete: if isAdmin();
+    }
+
+    match /reports/{reportId} {
+      // Allow any authenticated user to read reports
+      allow read: if isAuthenticated();
+      
+      // Only Citizens can create reports (or Admin/Staff for testing)
+      allow create: if isAuthenticated() && (
+        (request.resource.data.citizenUid == request.auth.uid && isValidReport(request.resource.data)) ||
+        isAdmin() ||
+        hasAnyRole(['Inspection', 'Authority', 'BranchManager'])
+      );
+      
+      allow update: if isAuthenticated() && (
+        isAdmin() ||
+        (resource.data.citizenUid == request.auth.uid && request.resource.data.citizenUid == resource.data.citizenUid) || // Citizen can update their own (e.g. add notes)
+        isValidReportUpdate(request.resource.data, resource.data)
+      );
+      
+      allow delete: if isAdmin() || hasAnyRole(['Inspection', 'Authority', 'BranchManager']);
+    }
+
+    match /Reports/{reportId} {
+      // New collection for compatibility with newer dashboard versions
+      allow read: if isAuthenticated();
+      allow create: if isAuthenticated() && (
+        (request.resource.data.userId == request.auth.uid) ||
+        isAdmin()
+      );
+      allow update, delete: if isAdmin();
+    }
+
+    match /monthly_reports/{reportId} {
+      allow read: if hasAnyRole(['Admin', 'Authority', 'BranchManager']);
+      allow create: if hasAnyRole(['Admin', 'BranchManager']);
+      allow update, delete: if isAdmin();
+    }
+
+    match /metadata/counters {
+      // Allow authenticated users to read, update and create the counters for serial number generation
+      // This is necessary because the first user of the year might need to create the document or the field
+      allow read, update, create: if isAuthenticated();
+      // Only admin can delete the counters document
+      allow delete: if isAdmin();
+    }
+
+    match /test/connection {
+      // Allow any user (even unauthenticated) to read this document for connection testing
+      allow read: if true;
+    }
+
+    match /projects/{projectId} {
+      allow read: if hasAnyRole(['Admin', 'Coordinator', 'Authority', 'BranchManager', 'Supervisor', 'wali']);
+      allow create: if hasAnyRole(['Admin', 'Coordinator', 'Authority']);
+      allow update: if hasAnyRole(['Admin', 'Coordinator', 'wali']) || 
+                   (hasAnyRole(['Authority']) && resource.data.ownerDirectorateId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.entity);
+      allow delete: if isAdmin();
+    }
+
+    match /administrative_decisions/{decisionId} {
+      allow read: if hasAnyRole(['Admin', 'Coordinator', 'Authority', 'wali']);
+      allow create: if hasAnyRole(['Admin', 'wali']);
+      allow update, delete: if isAdmin();
+    }
+
+    match /coordination_requests/{requestId} {
+      allow read: if hasAnyRole(['Admin', 'Coordinator', 'Authority', 'wali']);
+      allow create: if hasAnyRole(['Admin', 'Coordinator']);
+      allow update, delete: if isAdmin();
+    }
+
+    match /directorate_responses/{responseId} {
+      allow read: if hasAnyRole(['Admin', 'Coordinator', 'Authority', 'wali']);
+      allow create: if hasAnyRole(['Admin', 'Authority']);
+      allow update: if isAdmin() || (isAuthenticated() && resource.data.directorateId == get(/databases/$(database)/documents/users/$(request.auth.uid)).data.entity);
+      allow delete: if isAdmin();
+    }
+
+    match /conflicts/{conflictId} {
+      allow read: if hasAnyRole(['Admin', 'Coordinator', 'Authority', 'Supervisor', 'wali']);
+      allow create, update: if hasAnyRole(['Admin', 'Coordinator', 'wali']);
+      allow delete: if isAdmin();
+    }
+
+    match /no_conflict_certificates/{certId} {
+      allow read: if isAuthenticated();
+      allow create: if hasAnyRole(['Admin', 'Coordinator', 'wali']);
+      allow update, delete: if isAdmin();
+    }
+
+    match /project_logs/{logId} {
+      allow read: if hasAnyRole(['Admin', 'Coordinator', 'Authority', 'Supervisor', 'wali']);
+      allow create: if isAuthenticated();
+      allow update, delete: if false;
+    }
+  }
+}

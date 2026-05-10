@@ -1,0 +1,178 @@
+{
+  "entities": {
+    "UserProfile": {
+      "title": "User Profile",
+      "description": "Stores user account information and roles.",
+      "type": "object",
+      "properties": {
+        "uid": { "type": "string" },
+        "name": { "type": "string" },
+        "role": { "type": "string", "enum": ["Admin", "BranchManager", "Inspection", "Authority", "Maintenance", "Contractor", "Citizen", "Coordinator", "Supervisor", "wali"] },
+        "entity": { "type": "string", "enum": ["Municipality", "Sonelgaz", "ADE", "ONA", "ProjectsCoordination", "Wilaya"] },
+        "phoneNumber": { "type": "string" },
+        "email": { "type": "string" },
+        "region": { "type": "string" },
+        "status": { "type": "string", "enum": ["Active", "Frozen"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["uid", "name", "role", "status", "createdAt"]
+    },
+    "Reports": {
+      "title": "Reports",
+      "description": "Stores road problem reports from citizens.",
+      "type": "object",
+      "properties": {
+        "userId": { "type": "string" },
+        "type": { "type": "string" },
+        "imageUrl": { "type": "string" },
+        "location": {
+          "type": "object",
+          "properties": {
+            "latitude": { "type": "number" },
+            "longitude": { "type": "number" }
+          }
+        },
+        "note": { "type": "string" },
+        "status": { "type": "string", "enum": ["pending", "New", "Pricing", "Negotiating", "Permitted", "Repairing", "Repaired", "Verified", "Rejected"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["userId", "type", "imageUrl", "location", "status", "createdAt"]
+    },
+    "Projects": {
+      "title": "Coordination Projects",
+      "description": "Stores institutional projects for coordination.",
+      "type": "object",
+      "properties": {
+        "title": { "type": "string" },
+        "description": { "type": "string" },
+        "projectType": { "type": "string" },
+        "ownerDirectorateId": { "type": "string" },
+        "locationName": { "type": "string" },
+        "latitude": { "type": "number" },
+        "longitude": { "type": "number" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["title", "ownerDirectorateId", "latitude", "longitude", "status", "createdAt"]
+    },
+    "CoordinationRequests": {
+      "title": "Coordination Requests",
+      "description": "Requests sent to directorates to review projects.",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string" },
+        "coordinatorId": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["projectId", "coordinatorId", "status", "createdAt"]
+    },
+    "DirectorateResponses": {
+      "title": "Directorate Responses",
+      "description": "Responses from directorates regarding coordination requests.",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string" },
+        "requestId": { "type": "string" },
+        "directorateId": { "type": "string" },
+        "responseType": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["projectId", "requestId", "directorateId", "responseType", "createdAt"]
+    },
+    "Conflicts": {
+      "title": "Project Conflicts",
+      "description": "Detected spatial or temporal conflicts between projects.",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string" },
+        "conflictingProjectId": { "type": "string" },
+        "status": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["projectId", "conflictingProjectId", "status", "createdAt"]
+    },
+    "NoConflictCertificates": {
+      "title": "No Conflict Certificates",
+      "description": "Certificates issued by coordinators.",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string" },
+        "certificateNumber": { "type": "string" },
+        "issuedAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["projectId", "certificateNumber", "issuedAt"]
+    },
+    "ProjectLogs": {
+      "title": "Project Logs",
+      "description": "Audit trail for project actions.",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string" },
+        "userId": { "type": "string" },
+        "action": { "type": "string" },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["projectId", "userId", "action", "createdAt"]
+    },
+    "AdministrativeDecisions": {
+      "title": "Administrative Decisions",
+      "description": "Strategic decisions issued by Wali or Admin.",
+      "type": "object",
+      "properties": {
+        "projectId": { "type": "string" },
+        "issuedByUserId": { "type": "string" },
+        "issuedByName": { "type": "string" },
+        "issuedByRole": { "type": "string", "enum": ["wali", "Admin"] },
+        "decisionType": { "type": "string" },
+        "decisionText": { "type": "string" },
+        "affectedDirectorates": { "type": "array", "items": { "type": "string" } },
+        "status": { "type": "string", "enum": ["Draft", "Final"] },
+        "createdAt": { "type": "string", "format": "date-time" }
+      },
+      "required": ["projectId", "issuedByUserId", "issuedByName", "issuedByRole", "decisionType", "decisionText", "status", "createdAt"]
+    }
+  },
+  "firestore": {
+    "/users/{uid}": {
+      "schema": "UserProfile",
+      "description": "User profile documents."
+    },
+    "/Reports/{reportId}": {
+      "schema": "Reports",
+      "description": "Road problem reports."
+    },
+    "/reports/{reportId}": {
+      "schema": "Report",
+      "description": "Legacy infrastructure issue reports."
+    },
+    "/projects/{projectId}": {
+      "schema": "Projects",
+      "description": "Smart coordination projects."
+    },
+    "/coordination_requests/{requestId}": {
+      "schema": "CoordinationRequests",
+      "description": "Coordination request documents."
+    },
+    "/directorate_responses/{responseId}": {
+      "schema": "DirectorateResponses",
+      "description": "Directorate response documents."
+    },
+    "/conflicts/{conflictId}": {
+      "schema": "Conflicts",
+      "description": "Project conflict documents."
+    },
+    "/no_conflict_certificates/{certId}": {
+      "schema": "NoConflictCertificates",
+      "description": "Certificates issued by coordinators."
+    },
+    "/project_logs/{logId}": {
+      "schema": "ProjectLogs",
+      "description": "Logs of actions on projects."
+    },
+    "/administrative_decisions/{decisionId}": {
+      "schema": "AdministrativeDecisions",
+      "description": "Official strategic decisions and instructions."
+    }
+  }
+}

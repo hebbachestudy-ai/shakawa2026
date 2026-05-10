@@ -1,0 +1,89 @@
+@import url('https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;500;600;700&family=Space+Grotesk:wght@500;700&display=swap');
+@import "tailwindcss";
+@import "leaflet/dist/leaflet.css";
+@import "leaflet-routing-machine/dist/leaflet-routing-machine.css";
+
+@theme {
+  --font-sans: "Cairo", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Space Grotesk", "Cairo", sans-serif;
+  
+  --color-brand-primary: #4f46e5; /* Indigo 600 */
+  --color-brand-secondary: #059669; /* Emerald 600 */
+  --color-brand-accent: #d97706; /* Amber 600 */
+  --color-brand-danger: #dc2626; /* Red 600 */
+  
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
+}
+
+@layer base {
+  body {
+    @apply bg-slate-50 text-slate-900 antialiased;
+    font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+  }
+}
+
+@layer components {
+  .glass-card {
+    @apply bg-white/80 backdrop-blur-md border border-white/20 shadow-xl shadow-slate-200/50;
+  }
+  
+  .btn-primary {
+    @apply bg-brand-primary text-white px-6 py-3 rounded-xl font-medium transition-all hover:scale-[1.02] active:scale-[0.98] shadow-lg shadow-brand-primary/20;
+  }
+  
+  .btn-secondary {
+    @apply bg-white text-slate-900 border border-slate-200 px-6 py-3 rounded-xl font-medium transition-all hover:bg-slate-50 active:scale-[0.98];
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-brand-primary/20 focus:border-brand-primary transition-all outline-none bg-white/50;
+  }
+
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+}
+
+/* Custom RTL adjustments */
+[dir="rtl"] .font-display {
+  font-family: 'Space Grotesk', 'Cairo', sans-serif;
+}
+
+.logo-text {
+  @apply font-display font-bold tracking-tighter text-2xl bg-gradient-to-r from-brand-primary to-brand-secondary bg-clip-text text-transparent;
+}
+
+.shakawi-logo {
+  @apply flex items-center gap-3;
+}
+
+.shakawi-logo-icon {
+  @apply w-10 h-10 bg-brand-primary rounded-xl flex items-center justify-center text-white shadow-lg shadow-brand-primary/30;
+}
+
+/* Animations */
+@keyframes slideUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.animate-slide-up {
+  animation: slideUp 0.5s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+/* Mobile icon visibility fixes */
+@media (max-width: 640px) {
+  .lucide {
+    stroke-width: 2.5px; /* Thicker icons on mobile */
+  }
+}
+
+.lucide {
+  flex-shrink: 0;
+}
+
