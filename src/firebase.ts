@@ -8,12 +8,12 @@ import {
 import { getStorage } from "firebase/storage";
 
 const firebaseConfig = {
-  apiKey:AIzaSyAR55z3_7fDco5Lv9uoze_IFZbaCEBi2sU,
-  authDomain: gen-lang-client-0320815828.firebaseapp.com,
-  projectId: gen-lang-client-0320815828,
-  storageBucket: gen-lang-client-0320815828.firebasestorage.app,
-  messagingSenderId: 1081365990604,
-  appId: 1:1081365990604:web:968fb01be8c74495904669,
+  apiKey:"AIzaSyAR55z3_7fDco5Lv9uoze_IFZbaCEBi2sU",
+  authDomain:"gen-lang-client-0320815828.firebaseapp.com",
+  projectId:"gen-lang-client-0320815828",
+  storageBucket:"gen-lang-client-0320815828.firebasestorage.app",
+  messagingSenderId:"1081365990604",
+  appId:"1:1081365990604:web:968fb01be8c74495904669",
 };
 
 const app = initializeApp(firebaseConfig);
